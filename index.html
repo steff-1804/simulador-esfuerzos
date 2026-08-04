@@ -3,251 +3,501 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Analizador de Esfuerzos Combinados</title>
+  <meta name="description" content="Simulador interactivo del ejercicio 4.112 de flexión y esfuerzo normal." />
+  <meta name="theme-color" content="#07101d" />
+  <title>Ejercicio 4.112 · Máximo doblez en un tubo</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
+
 <body>
   <header class="topbar">
     <div class="brand">
-      <div class="brand-icon">▦</div>
+      <div class="brand-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24">
+          <path d="M5 4h14v16H5z"></path>
+          <path d="M8 8h8M8 12h3M13 12h3M8 16h3M13 16h3"></path>
+        </svg>
+      </div>
       <div>
-        <div class="title-row">
-          <h1>Prensa en C: Análisis de Esfuerzos Combinados</h1>
-          <span class="code-chip">Código P4.102</span>
-        </div>
-        <p>Modelo analítico para sección tubular rectangular bajo carga axial y flexión</p>
+        <span class="brand-overline">Mecánica de materiales</span>
+        <h1>Ejercicio 4.112 · Máximo doblez en un tubo</h1>
       </div>
     </div>
 
     <div class="header-actions">
-      <button id="simulateBtn" class="btn btn-primary">▶ Iniciar simulación</button>
-      <button id="resetBtn" class="btn btn-ghost">↶ Restablecer valores</button>
+      <span class="status-pill"><i></i>Cálculo en tiempo real</span>
+      <button id="resetBtn" class="icon-btn" type="button" aria-label="Restablecer valores" title="Restablecer valores">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 12a8 8 0 1 0 2.3-5.7L4 8"></path>
+          <path d="M4 3v5h5"></path>
+        </svg>
+      </button>
     </div>
   </header>
 
-  <main class="app-grid">
-    <section class="left-column">
-      <article class="panel">
-        <div class="panel-heading">
-          <span class="step">0</span>
-          <h2>Modelo estructural</h2>
+  <main class="layout">
+    <aside class="sidebar">
+      <section class="card problem-card">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Enunciado</span>
+            <h2>Condición del problema</h2>
+          </div>
+          <span class="exercise-chip">4.112</span>
         </div>
 
-        <div class="diagram-wrap">
-          <svg id="structureSvg" viewBox="0 0 760 390" role="img" aria-label="Esquema de prensa en C">
-            <defs>
-              <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L9,3 z" fill="#ff4d67"></path>
-              </marker>
-              <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L9,3 z" fill="#4aa3ff"></path>
-              </marker>
-            </defs>
+        <p>
+          Se realiza un doblez de altura <strong>h</strong> en un tubo metálico.
+          El esfuerzo máximo después del doblez no debe exceder un múltiplo
+          del esfuerzo que existía cuando la barra estaba recta.
+        </p>
 
-            <path d="M155 55 H520 V125 H285 V305 H520 V355 H155 Z"
-                  fill="#253149" stroke="#637391" stroke-width="6" />
-            <rect x="455" y="142" width="65" height="62" rx="4"
-                  fill="#c56e12" stroke="#ffad33" stroke-width="4" />
-            <line id="forceArrow" x1="488" y1="85" x2="488" y2="137"
-                  stroke="#ff4d67" stroke-width="8" marker-end="url(#arrowRed)" />
-            <line x1="488" y1="255" x2="488" y2="207"
-                  stroke="#4aa3ff" stroke-width="7" marker-end="url(#arrowBlue)" />
-            <line x1="205" y1="335" x2="470" y2="335"
-                  stroke="#dce8ff" stroke-width="3" />
-            <line x1="205" y1="327" x2="205" y2="343" stroke="#dce8ff" stroke-width="3" />
-            <line x1="470" y1="327" x2="470" y2="343" stroke="#dce8ff" stroke-width="3" />
+        <div class="condition-box">
+          <span>Condición de diseño</span>
+          <strong>σ<sub>máx, doblado</sub> ≤ k · σ<sub>recto</sub></strong>
+        </div>
+      </section>
 
-            <text id="forceLabel" x="505" y="112" fill="#ff8092" font-size="20" font-weight="700">P = 20.0 kN</text>
-            <text id="lengthLabel" x="305" y="326" fill="#22d3b6" font-size="20" font-weight="700">L = 200 mm</text>
-            <text x="103" y="76" fill="#e7efff" font-size="18" font-weight="700">Sección a-a</text>
-            <line x1="110" y1="90" x2="225" y2="90" stroke="#e7efff" stroke-width="2" stroke-dasharray="8 8" />
+      <section class="card input-card">
+        <div class="section-heading">
+          <div>
+            <span class="eyebrow">Datos de entrada</span>
+            <h2>Geometría y criterio</h2>
+          </div>
+          <span class="step">01</span>
+        </div>
 
-            <g transform="translate(565,38)">
-              <rect x="0" y="0" width="130" height="115" fill="none" stroke="#46d0ff" stroke-width="5"/>
-              <rect id="innerSection" x="20" y="20" width="90" height="75" fill="#0c1324" stroke="#4b5d78" stroke-width="4"/>
-              <circle cx="128" cy="30" r="7" fill="#22d3b6"/>
-              <circle cx="0" cy="30" r="7" fill="#ff4d67"/>
-              <text x="141" y="36" fill="#22d3b6" font-size="19" font-weight="800">A</text>
-              <text x="-28" y="36" fill="#ff4d67" font-size="19" font-weight="800">B</text>
-              <text x="86" y="137" fill="#cbd7ec" font-size="16">h</text>
-              <text x="55" y="-10" fill="#cbd7ec" font-size="16">w</text>
-            </g>
+        <div class="input-list">
+          <div class="input-group">
+            <div class="input-label-row">
+              <label for="dNumber">Diámetro exterior <em>D</em></label>
+              <div class="number-box">
+                <input id="dNumber" type="number" min="0.1" max="5" step="0.01" value="0.75" />
+                <span>pulg</span>
+              </div>
+            </div>
+            <input id="d" class="range" type="range" min="0.1" max="5" step="0.01" value="0.75" />
+          </div>
+
+          <div class="input-group">
+            <div class="input-label-row">
+              <label for="tNumber">Espesor de pared <em>t</em></label>
+              <div class="number-box">
+                <input id="tNumber" type="number" min="0.01" max="1" step="0.01" value="0.08" />
+                <span>pulg</span>
+              </div>
+            </div>
+            <input id="t" class="range" type="range" min="0.01" max="1" step="0.01" value="0.08" />
+          </div>
+
+          <div class="input-group">
+            <div class="input-label-row">
+              <label for="kNumber">Relación máxima permitida <em>k</em></label>
+              <div class="number-box">
+                <input id="kNumber" type="number" min="1.1" max="10" step="0.1" value="4" />
+                <span>veces</span>
+              </div>
+            </div>
+            <input id="k" class="range" type="range" min="1.1" max="10" step="0.1" value="4" />
+          </div>
+
+          <div class="input-group">
+            <div class="input-label-row">
+              <label for="pNumber">Carga de referencia <em>P</em></label>
+              <div class="number-box">
+                <input id="pNumber" type="number" min="0.1" max="100" step="0.1" value="1" />
+                <span>kip</span>
+              </div>
+            </div>
+            <input id="p" class="range" type="range" min="0.1" max="100" step="0.1" value="1" />
+            <small>Solo se usa para mostrar esfuerzos; el valor de h no depende de P.</small>
+          </div>
+        </div>
+
+        <div id="warning" class="warning hidden" role="alert">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 3 2.5 20h19L12 3Z"></path>
+            <path d="M12 9v4M12 17h.01"></path>
           </svg>
+          <span id="warningText"></span>
         </div>
 
-        <div class="info-grid">
-          <div class="mini-card">
-            <h3>Línea de análisis</h3>
-            <p>La excentricidad se mide desde el centroide de la sección hasta la línea de acción de la carga.</p>
+        <button id="calculateBtn" class="primary-btn" type="button">
+          <svg viewBox="0 0 24 24">
+            <path d="m8 5 11 7-11 7V5Z"></path>
+          </svg>
+          Calcular máximo doblez
+        </button>
+      </section>
+
+      <section class="card assumptions-card">
+        <span class="eyebrow">Hipótesis</span>
+        <ul>
+          <li>Material elástico lineal y sección circular hueca constante.</li>
+          <li>La carga axial actúa con excentricidad igual a h.</li>
+          <li>Se aplica superposición: esfuerzo axial + esfuerzo de flexión.</li>
+          <li>No se considera ovalización local ni concentración de esfuerzos.</li>
+        </ul>
+      </section>
+    </aside>
+
+    <section class="content">
+      <section class="card diagram-card">
+        <div class="section-heading panel-heading">
+          <div>
+            <span class="eyebrow">Visualización</span>
+            <h2>Barra recta y barra doblada</h2>
           </div>
-          <div class="mini-card">
-            <h3>Mecánica del fenómeno</h3>
-            <p>La carga axial se combina con la flexión. Los puntos A y B representan fibras extremas opuestas.</p>
-          </div>
-        </div>
-      </article>
-
-      <article class="panel">
-        <div class="panel-heading">
-          <span class="step">⚙</span>
-          <h2>Parámetros de configuración</h2>
-        </div>
-
-        <div class="controls-grid">
-          <label class="control-card">
-            <div class="control-top">
-              <span>Carga externa P</span>
-              <strong><output id="pOut">20.0</output> kN</strong>
-            </div>
-            <input id="p" type="range" min="1" max="100" step="0.5" value="20" />
-          </label>
-
-          <label class="control-card">
-            <div class="control-top">
-              <span>Excentricidad e</span>
-              <strong><output id="eOut">200</output> mm</strong>
-            </div>
-            <input id="e" type="range" min="0" max="500" step="5" value="200" />
-          </label>
-
-          <label class="control-card">
-            <div class="control-top">
-              <span>Ancho exterior w</span>
-              <strong><output id="wOut">80</output> mm</strong>
-            </div>
-            <input id="w" type="range" min="30" max="200" step="1" value="80" />
-          </label>
-
-          <label class="control-card">
-            <div class="control-top">
-              <span>Altura exterior h</span>
-              <strong><output id="hOut">60</output> mm</strong>
-            </div>
-            <input id="h" type="range" min="30" max="200" step="1" value="60" />
-          </label>
-
-          <label class="control-card">
-            <div class="control-top">
-              <span>Espesor t</span>
-              <strong><output id="tOut">10</output> mm</strong>
-            </div>
-            <input id="t" type="range" min="1" max="25" step="0.5" value="10" />
-          </label>
-
-          <label class="control-card">
-            <div class="control-top">
-              <span>Límite de fluencia σ<sub>y</sub></span>
-              <strong><output id="syOut">250</output> MPa</strong>
-            </div>
-            <input id="sy" type="range" min="100" max="600" step="5" value="250" />
-          </label>
-        </div>
-
-        <div id="warning" class="warning hidden" role="alert"></div>
-      </article>
-    </section>
-
-    <section class="right-column">
-      <article class="panel results-panel">
-        <div class="panel-heading">
-          <span class="step">1</span>
-          <h2>Propiedades de la sección transversal</h2>
-        </div>
-
-        <div class="formula-card">
-          <h3>A) Área neta</h3>
-          <div class="formula">A = (w · h) − (w − 2t)(h − 2t)</div>
-          <div id="areaCalc" class="calculation"></div>
-          <div class="result-line">A = <strong id="areaResult">2400</strong> mm²</div>
-        </div>
-
-        <div class="formula-card">
-          <h3>B) Momento de inercia respecto al eje horizontal</h3>
-          <div class="formula">I = (w · h³)/12 − ((w − 2t)(h − 2t)³)/12</div>
-          <div id="inertiaCalc" class="calculation"></div>
-          <div class="result-line">I = <strong id="inertiaResult">1 840 000</strong> mm⁴</div>
-        </div>
-
-        <div class="explain-box">
-          <h3>¿Qué significa?</h3>
-          <p><strong>A:</strong> área resistente real de la sección.</p>
-          <p><strong>I:</strong> resistencia geométrica de la sección frente a la flexión.</p>
-          <p><strong>c = h/2:</strong> distancia desde el eje neutro hasta la fibra extrema.</p>
-        </div>
-      </article>
-
-      <article class="panel results-panel">
-        <div class="panel-heading">
-          <span class="step">2</span>
-          <h2>Esfuerzos axial, de flexión y combinados</h2>
-        </div>
-
-        <div class="metric-grid">
-          <div class="metric">
-            <span>Momento flector</span>
-            <strong id="momentResult">4.00</strong>
-            <small>kN·m</small>
-          </div>
-          <div class="metric">
-            <span>Esfuerzo axial</span>
-            <strong id="axialResult">8.33</strong>
-            <small>MPa</small>
-          </div>
-          <div class="metric">
-            <span>Esfuerzo de flexión</span>
-            <strong id="bendResult">65.22</strong>
-            <small>MPa</small>
+          <div class="legend">
+            <span><i class="red"></i>Carga axial</span>
+            <span><i class="green"></i>Altura h</span>
+            <span><i class="blue"></i>Sección crítica</span>
           </div>
         </div>
 
-        <div class="formula-card">
-          <h3>Combinación en fibras extremas</h3>
-          <div class="formula">σ = P/A ± M·c/I</div>
-          <div class="stress-bars">
-            <div class="stress-row">
-              <span>Punto A</span>
-              <div class="bar-track"><div id="barA" class="bar bar-a"></div></div>
-              <strong id="stressAResult">73.55 MPa</strong>
+        <div class="diagram-grid">
+          <div class="diagram-panel">
+            <div class="diagram-title">
+              <span>a)</span>
+              <strong>Estado recto</strong>
             </div>
-            <div class="stress-row">
-              <span>Punto B</span>
-              <div class="bar-track"><div id="barB" class="bar bar-b"></div></div>
-              <strong id="stressBResult">−56.88 MPa</strong>
+
+            <svg viewBox="0 0 660 260" role="img" aria-label="Tubo recto sometido a carga axial">
+              <defs>
+                <linearGradient id="tubeStraight" x1="0" x2="1">
+                  <stop offset="0" stop-color="#8ea6c6"></stop>
+                  <stop offset=".5" stop-color="#d7e2ef"></stop>
+                  <stop offset="1" stop-color="#7890b1"></stop>
+                </linearGradient>
+                <marker id="redArrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0 0v6l9-3z" fill="#ff5b74"></path>
+                </marker>
+              </defs>
+
+              <rect x="0" y="0" width="660" height="260" rx="16" fill="#071421"></rect>
+              <line x1="85" y1="130" x2="575" y2="130" stroke="#18324d" stroke-width="1.5" stroke-dasharray="7 8"></line>
+
+              <rect x="140" y="105" width="380" height="50" rx="25" fill="url(#tubeStraight)" stroke="#dce7f4" stroke-width="2"></rect>
+              <ellipse cx="140" cy="130" rx="19" ry="25" fill="#657d9d" stroke="#dce7f4" stroke-width="2"></ellipse>
+              <ellipse cx="520" cy="130" rx="19" ry="25" fill="#8ca4c2" stroke="#dce7f4" stroke-width="2"></ellipse>
+
+              <line x1="140" y1="130" x2="70" y2="130" stroke="#ff5b74" stroke-width="7" marker-end="url(#redArrow)"></line>
+              <line x1="520" y1="130" x2="590" y2="130" stroke="#ff5b74" stroke-width="7" marker-end="url(#redArrow)"></line>
+
+              <text x="72" y="110" fill="#ff91a2" font-size="18" font-weight="800">P′</text>
+              <text x="574" y="110" fill="#ff91a2" font-size="18" font-weight="800">P</text>
+
+              <line x1="188" y1="89" x2="188" y2="171" stroke="#95a9c2" stroke-width="2"></line>
+              <line x1="178" y1="89" x2="198" y2="89" stroke="#95a9c2" stroke-width="2"></line>
+              <line x1="178" y1="171" x2="198" y2="171" stroke="#95a9c2" stroke-width="2"></line>
+              <text id="straightDLabel" x="202" y="136" fill="#c6d5e8" font-size="16" font-weight="700">D = 0.75 pulg</text>
+            </svg>
+
+            <div class="diagram-note">
+              <strong>Esfuerzo uniforme</strong>
+              <span>σ<sub>recto</sub> = P/A</span>
+            </div>
+          </div>
+
+          <div class="diagram-panel">
+            <div class="diagram-title">
+              <span>b)</span>
+              <strong>Estado doblado</strong>
+            </div>
+
+            <svg viewBox="0 0 660 260" role="img" aria-label="Tubo doblado sometido a carga axial">
+              <defs>
+                <linearGradient id="tubeBent" x1="0" x2="1">
+                  <stop offset="0" stop-color="#8ea6c6"></stop>
+                  <stop offset=".5" stop-color="#d7e2ef"></stop>
+                  <stop offset="1" stop-color="#7890b1"></stop>
+                </linearGradient>
+                <marker id="redArrow2" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                  <path d="M0 0v6l9-3z" fill="#ff5b74"></path>
+                </marker>
+                <marker id="dimArrow" markerWidth="9" markerHeight="9" refX="5" refY="3" orient="auto-start-reverse">
+                  <path d="M0 0v6l6-3z" fill="#2dd4bf"></path>
+                </marker>
+              </defs>
+
+              <rect x="0" y="0" width="660" height="260" rx="16" fill="#071421"></rect>
+              <line x1="85" y1="94" x2="575" y2="94" stroke="#18324d" stroke-width="1.5" stroke-dasharray="7 8"></line>
+
+              <path id="bentTubePath"
+                    d="M140 94 H225 C265 94 275 170 320 170 H390 C435 170 445 94 485 94 H520"
+                    fill="none" stroke="url(#tubeBent)" stroke-width="49" stroke-linecap="round" stroke-linejoin="round"></path>
+              <path
+                    d="M140 94 H225 C265 94 275 170 320 170 H390 C435 170 445 94 485 94 H520"
+                    fill="none" stroke="#e3edf8" stroke-width="2" stroke-linecap="round" opacity=".7"></path>
+
+              <line x1="140" y1="94" x2="70" y2="94" stroke="#ff5b74" stroke-width="7" marker-end="url(#redArrow2)"></line>
+              <line x1="520" y1="94" x2="590" y2="94" stroke="#ff5b74" stroke-width="7" marker-end="url(#redArrow2)"></line>
+
+              <text x="72" y="74" fill="#ff91a2" font-size="18" font-weight="800">P′</text>
+              <text x="574" y="74" fill="#ff91a2" font-size="18" font-weight="800">P</text>
+
+              <line x1="355" y1="94" x2="355" y2="170" stroke="#2dd4bf" stroke-width="2.5"
+                    marker-start="url(#dimArrow)" marker-end="url(#dimArrow)"></line>
+              <text id="hDiagramLabel" x="373" y="138" fill="#63ead8" font-size="18" font-weight="900">h = 0.455 pulg</text>
+
+              <line x1="320" y1="134" x2="320" y2="205" stroke="#55a9ff" stroke-width="3" stroke-dasharray="6 6"></line>
+              <text x="272" y="225" fill="#8cc8ff" font-size="15" font-weight="800">Sección crítica</text>
+            </svg>
+
+            <div class="diagram-note">
+              <strong>Esfuerzo combinado</strong>
+              <span>σ<sub>máx</sub> = P/A + Phc/I</span>
             </div>
           </div>
         </div>
+      </section>
 
-        <div class="metric-grid metric-grid-2">
-          <div class="metric">
-            <span>Esfuerzo máximo absoluto</span>
-            <strong id="maxStressResult">73.55</strong>
-            <small>MPa</small>
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span class="kpi-icon blue">
+            <svg viewBox="0 0 24 24"><path d="M4 19h16M6 16l4-5 3 3 5-8"></path></svg>
+          </span>
+          <div>
+            <small>Diámetro interior</small>
+            <strong><span id="diResult">0.590</span> <em>pulg</em></strong>
           </div>
-          <div class="metric">
-            <span>Factor de seguridad</span>
-            <strong id="fosResult">3.40</strong>
-            <small>σy / |σ|max</small>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-icon cyan">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"></path></svg>
+          </span>
+          <div>
+            <small>Área transversal</small>
+            <strong><span id="areaResult">0.1684</span> <em>pulg²</em></strong>
           </div>
-        </div>
+        </article>
 
-        <div id="statusBox" class="status safe">
-          <strong id="statusTitle">Condición aceptable</strong>
-          <span id="statusText">El esfuerzo máximo está por debajo del límite de fluencia.</span>
-        </div>
-      </article>
+        <article class="kpi-card">
+          <span class="kpi-icon violet">
+            <svg viewBox="0 0 24 24"><path d="M5 18c3-9 11-9 14 0M5 6c3 9 11 9 14 0"></path></svg>
+          </span>
+          <div>
+            <small>Momento de inercia</small>
+            <strong><span id="inertiaResult">0.00958</span> <em>pulg⁴</em></strong>
+          </div>
+        </article>
 
-      <article class="panel">
-        <div class="panel-heading">
-          <span class="step">3</span>
-          <h2>Registro de cálculo</h2>
-        </div>
-        <div id="log" class="log">
-          Ajuste los parámetros y presione “Iniciar simulación”.
-        </div>
-      </article>
+        <article class="kpi-card highlight">
+          <span class="kpi-icon green">
+            <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg>
+          </span>
+          <div>
+            <small>Máximo doblez permitido</small>
+            <strong><span id="hResult">0.455</span> <em>pulg</em></strong>
+          </div>
+        </article>
+      </section>
+
+      <section class="results-grid">
+        <article class="card derivation-card">
+          <div class="section-heading panel-heading">
+            <div>
+              <span class="eyebrow">Desarrollo analítico</span>
+              <h2>Obtención de la ecuación de h</h2>
+            </div>
+            <span class="step">02</span>
+          </div>
+
+          <div class="derivation">
+            <div class="formula-step">
+              <span>1</span>
+              <div>
+                <small>Barra recta</small>
+                <strong>σ<sub>recto</sub> = P/A</strong>
+              </div>
+            </div>
+
+            <div class="formula-step">
+              <span>2</span>
+              <div>
+                <small>Barra doblada</small>
+                <strong>σ<sub>máx</sub> = P/A + M c/I</strong>
+              </div>
+            </div>
+
+            <div class="formula-step">
+              <span>3</span>
+              <div>
+                <small>Momento debido al doblez</small>
+                <strong>M = P h</strong>
+              </div>
+            </div>
+
+            <div class="formula-step">
+              <span>4</span>
+              <div>
+                <small>Condición límite</small>
+                <strong>P/A + P h c/I = k(P/A)</strong>
+              </div>
+            </div>
+
+            <div class="final-equation">
+              <span>Ecuación general</span>
+              <strong>h<sub>máx</sub> = (k − 1) I / (A c)</strong>
+            </div>
+          </div>
+        </article>
+
+        <article class="card section-card">
+          <div class="section-heading panel-heading">
+            <div>
+              <span class="eyebrow">Propiedades de sección</span>
+              <h2>Tubo circular hueco</h2>
+            </div>
+            <span class="step">03</span>
+          </div>
+
+          <div class="section-layout">
+            <svg viewBox="0 0 260 260" role="img" aria-label="Sección circular hueca">
+              <defs>
+                <radialGradient id="ringGradient">
+                  <stop offset="0" stop-color="#0a1727"></stop>
+                  <stop offset=".6" stop-color="#0a1727"></stop>
+                  <stop offset=".61" stop-color="#7ea4cf"></stop>
+                  <stop offset="1" stop-color="#d4e2f0"></stop>
+                </radialGradient>
+              </defs>
+              <rect x="10" y="10" width="240" height="240" rx="20" fill="#071421" stroke="#17304a"></rect>
+              <circle cx="130" cy="130" r="78" fill="#90a9c7" stroke="#dbe8f5" stroke-width="3"></circle>
+              <circle id="innerCircle" cx="130" cy="130" r="61.36" fill="#071421" stroke="#526b88" stroke-width="3"></circle>
+              <line x1="52" y1="130" x2="208" y2="130" stroke="#7f96b4" stroke-width="2"></line>
+              <text id="doLabel" x="93" y="117" fill="#dce8f6" font-size="15" font-weight="800">D = 0.75</text>
+              <line x1="130" y1="52" x2="130" y2="130" stroke="#f3c962" stroke-width="2" stroke-dasharray="6 6"></line>
+              <text id="cLabel" x="140" y="86" fill="#f6da8b" font-size="14" font-weight="800">c = 0.375</text>
+              <line x1="192" y1="67" x2="176" y2="84" stroke="#2dd4bf" stroke-width="2"></line>
+              <text id="tLabel" x="183" y="58" fill="#63ead8" font-size="14" font-weight="800">t = 0.08</text>
+            </svg>
+
+            <div class="property-list">
+              <div>
+                <span>Diámetro interior</span>
+                <strong>D<sub>i</sub> = D − 2t</strong>
+                <small id="diCalc">0.75 − 2(0.08) = 0.59 pulg</small>
+              </div>
+
+              <div>
+                <span>Área</span>
+                <strong>A = π/4 (D⁲ − D<sub>i</sub>⁲)</strong>
+                <small id="areaCalc">A = 0.1684 pulg²</small>
+              </div>
+
+              <div>
+                <span>Momento de inercia</span>
+                <strong>I = π/64 (D⁴ − D<sub>i</sub>⁴)</strong>
+                <small id="inertiaCalc">I = 0.00958 pulg⁴</small>
+              </div>
+
+              <div>
+                <span>Distancia extrema</span>
+                <strong>c = D/2</strong>
+                <small id="cCalc">c = 0.375 pulg</small>
+              </div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="results-grid lower-grid">
+        <article class="card verification-card">
+          <div class="section-heading panel-heading">
+            <div>
+              <span class="eyebrow">Comprobación</span>
+              <h2>Relación de esfuerzos</h2>
+            </div>
+            <span class="step">04</span>
+          </div>
+
+          <div class="verification-layout">
+            <div class="gauge" id="ratioGauge">
+              <div class="gauge-core">
+                <span id="ratioResult">4.00</span>
+                <small>σmáx / σrecto</small>
+              </div>
+            </div>
+
+            <div class="verification-values">
+              <div>
+                <span>Esfuerzo en barra recta</span>
+                <strong><span id="straightStressResult">5.94</span> ksi</strong>
+              </div>
+              <div>
+                <span>Esfuerzo de flexión</span>
+                <strong><span id="bendingStressResult">17.82</span> ksi</strong>
+              </div>
+              <div>
+                <span>Esfuerzo máximo doblado</span>
+                <strong><span id="bentStressResult">23.75</span> ksi</strong>
+              </div>
+            </div>
+          </div>
+
+          <div id="verificationStatus" class="verification-status safe">
+            <span class="check-icon">
+              <svg viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"></path></svg>
+            </span>
+            <div>
+              <strong>Condición satisfecha</strong>
+              <span id="verificationText">El esfuerzo máximo es exactamente 4 veces el esfuerzo recto.</span>
+            </div>
+          </div>
+        </article>
+
+        <article class="card result-card">
+          <div class="section-heading panel-heading">
+            <div>
+              <span class="eyebrow">Resultado final</span>
+              <h2>Máximo doblez permitido</h2>
+            </div>
+            <span class="step">05</span>
+          </div>
+
+          <div class="final-result">
+            <span class="result-label">h<sub>máx</sub></span>
+            <strong><span id="hBigResult">0.4553</span> pulg</strong>
+            <em><span id="hMmResult">11.56</span> mm</em>
+          </div>
+
+          <div class="substitution-box">
+            <span>Sustitución</span>
+            <strong id="hSubstitution">
+              h = (4 − 1)(0.009583)/(0.168389 × 0.375)
+            </strong>
+          </div>
+
+          <div class="report-actions">
+            <button id="copyBtn" class="secondary-btn" type="button">
+              <svg viewBox="0 0 24 24">
+                <path d="M8 8h11v11H8z"></path>
+                <path d="M5 16H4V5h11v1"></path>
+              </svg>
+              Copiar resultados
+            </button>
+
+            <button id="downloadBtn" class="secondary-btn" type="button">
+              <svg viewBox="0 0 24 24">
+                <path d="M12 3v12M7 10l5 5 5-5"></path>
+                <path d="M4 20h16"></path>
+              </svg>
+              Descargar reporte
+            </button>
+          </div>
+        </article>
+      </section>
+
+      <footer class="footer">
+        <span>Simulador académico · Ejercicio 4.112</span>
+        <span>Modelo de esfuerzo axial excéntrico y flexión combinada</span>
+      </footer>
     </section>
   </main>
 
+  <div id="toast" class="toast" role="status" aria-live="polite">Resultados copiados</div>
   <script src="app.js"></script>
 </body>
 </html>
