@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Analizador de Esfuerzos Combinados</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-icon">▦</div>
+      <div>
+        <div class="title-row">
+          <h1>Prensa en C: Análisis de Esfuerzos Combinados</h1>
+          <span class="code-chip">Código P4.102</span>
+        </div>
+        <p>Modelo analítico para sección tubular rectangular bajo carga axial y flexión</p>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button id="simulateBtn" class="btn btn-primary">▶ Iniciar simulación</button>
+      <button id="resetBtn" class="btn btn-ghost">↶ Restablecer valores</button>
+    </div>
+  </header>
+
+  <main class="app-grid">
+    <section class="left-column">
+      <article class="panel">
+        <div class="panel-heading">
+          <span class="step">0</span>
+          <h2>Modelo estructural</h2>
+        </div>
+
+        <div class="diagram-wrap">
+          <svg id="structureSvg" viewBox="0 0 760 390" role="img" aria-label="Esquema de prensa en C">
+            <defs>
+              <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#ff4d67"></path>
+              </marker>
+              <marker id="arrowBlue" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#4aa3ff"></path>
+              </marker>
+            </defs>
+
+            <path d="M155 55 H520 V125 H285 V305 H520 V355 H155 Z"
+                  fill="#253149" stroke="#637391" stroke-width="6" />
+            <rect x="455" y="142" width="65" height="62" rx="4"
+                  fill="#c56e12" stroke="#ffad33" stroke-width="4" />
+            <line id="forceArrow" x1="488" y1="85" x2="488" y2="137"
+                  stroke="#ff4d67" stroke-width="8" marker-end="url(#arrowRed)" />
+            <line x1="488" y1="255" x2="488" y2="207"
+                  stroke="#4aa3ff" stroke-width="7" marker-end="url(#arrowBlue)" />
+            <line x1="205" y1="335" x2="470" y2="335"
+                  stroke="#dce8ff" stroke-width="3" />
+            <line x1="205" y1="327" x2="205" y2="343" stroke="#dce8ff" stroke-width="3" />
+            <line x1="470" y1="327" x2="470" y2="343" stroke="#dce8ff" stroke-width="3" />
+
+            <text id="forceLabel" x="505" y="112" fill="#ff8092" font-size="20" font-weight="700">P = 20.0 kN</text>
+            <text id="lengthLabel" x="305" y="326" fill="#22d3b6" font-size="20" font-weight="700">L = 200 mm</text>
+            <text x="103" y="76" fill="#e7efff" font-size="18" font-weight="700">Sección a-a</text>
+            <line x1="110" y1="90" x2="225" y2="90" stroke="#e7efff" stroke-width="2" stroke-dasharray="8 8" />
+
+            <g transform="translate(565,38)">
+              <rect x="0" y="0" width="130" height="115" fill="none" stroke="#46d0ff" stroke-width="5"/>
+              <rect id="innerSection" x="20" y="20" width="90" height="75" fill="#0c1324" stroke="#4b5d78" stroke-width="4"/>
+              <circle cx="128" cy="30" r="7" fill="#22d3b6"/>
+              <circle cx="0" cy="30" r="7" fill="#ff4d67"/>
+              <text x="141" y="36" fill="#22d3b6" font-size="19" font-weight="800">A</text>
+              <text x="-28" y="36" fill="#ff4d67" font-size="19" font-weight="800">B</text>
+              <text x="86" y="137" fill="#cbd7ec" font-size="16">h</text>
+              <text x="55" y="-10" fill="#cbd7ec" font-size="16">w</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="info-grid">
+          <div class="mini-card">
+            <h3>Línea de análisis</h3>
+            <p>La excentricidad se mide desde el centroide de la sección hasta la línea de acción de la carga.</p>
+          </div>
+          <div class="mini-card">
+            <h3>Mecánica del fenómeno</h3>
+            <p>La carga axial se combina con la flexión. Los puntos A y B representan fibras extremas opuestas.</p>
+          </div>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <span class="step">⚙</span>
+          <h2>Parámetros de configuración</h2>
+        </div>
+
+        <div class="controls-grid">
+          <label class="control-card">
+            <div class="control-top">
+              <span>Carga externa P</span>
+              <strong><output id="pOut">20.0</output> kN</strong>
+            </div>
+            <input id="p" type="range" min="1" max="100" step="0.5" value="20" />
+          </label>
+
+          <label class="control-card">
+            <div class="control-top">
+              <span>Excentricidad e</span>
+              <strong><output id="eOut">200</output> mm</strong>
+            </div>
+            <input id="e" type="range" min="0" max="500" step="5" value="200" />
+          </label>
+
+          <label class="control-card">
+            <div class="control-top">
+              <span>Ancho exterior w</span>
+              <strong><output id="wOut">80</output> mm</strong>
+            </div>
+            <input id="w" type="range" min="30" max="200" step="1" value="80" />
+          </label>
+
+          <label class="control-card">
+            <div class="control-top">
+              <span>Altura exterior h</span>
+              <strong><output id="hOut">60</output> mm</strong>
+            </div>
+            <input id="h" type="range" min="30" max="200" step="1" value="60" />
+          </label>
+
+          <label class="control-card">
+            <div class="control-top">
+              <span>Espesor t</span>
+              <strong><output id="tOut">10</output> mm</strong>
+            </div>
+            <input id="t" type="range" min="1" max="25" step="0.5" value="10" />
+          </label>
+
+          <label class="control-card">
+            <div class="control-top">
+              <span>Límite de fluencia σ<sub>y</sub></span>
+              <strong><output id="syOut">250</output> MPa</strong>
+            </div>
+            <input id="sy" type="range" min="100" max="600" step="5" value="250" />
+          </label>
+        </div>
+
+        <div id="warning" class="warning hidden" role="alert"></div>
+      </article>
+    </section>
+
+    <section class="right-column">
+      <article class="panel results-panel">
+        <div class="panel-heading">
+          <span class="step">1</span>
+          <h2>Propiedades de la sección transversal</h2>
+        </div>
+
+        <div class="formula-card">
+          <h3>A) Área neta</h3>
+          <div class="formula">A = (w · h) − (w − 2t)(h − 2t)</div>
+          <div id="areaCalc" class="calculation"></div>
+          <div class="result-line">A = <strong id="areaResult">2400</strong> mm²</div>
+        </div>
+
+        <div class="formula-card">
+          <h3>B) Momento de inercia respecto al eje horizontal</h3>
+          <div class="formula">I = (w · h³)/12 − ((w − 2t)(h − 2t)³)/12</div>
+          <div id="inertiaCalc" class="calculation"></div>
+          <div class="result-line">I = <strong id="inertiaResult">1 840 000</strong> mm⁴</div>
+        </div>
+
+        <div class="explain-box">
+          <h3>¿Qué significa?</h3>
+          <p><strong>A:</strong> área resistente real de la sección.</p>
+          <p><strong>I:</strong> resistencia geométrica de la sección frente a la flexión.</p>
+          <p><strong>c = h/2:</strong> distancia desde el eje neutro hasta la fibra extrema.</p>
+        </div>
+      </article>
+
+      <article class="panel results-panel">
+        <div class="panel-heading">
+          <span class="step">2</span>
+          <h2>Esfuerzos axial, de flexión y combinados</h2>
+        </div>
+
+        <div class="metric-grid">
+          <div class="metric">
+            <span>Momento flector</span>
+            <strong id="momentResult">4.00</strong>
+            <small>kN·m</small>
+          </div>
+          <div class="metric">
+            <span>Esfuerzo axial</span>
+            <strong id="axialResult">8.33</strong>
+            <small>MPa</small>
+          </div>
+          <div class="metric">
+            <span>Esfuerzo de flexión</span>
+            <strong id="bendResult">65.22</strong>
+            <small>MPa</small>
+          </div>
+        </div>
+
+        <div class="formula-card">
+          <h3>Combinación en fibras extremas</h3>
+          <div class="formula">σ = P/A ± M·c/I</div>
+          <div class="stress-bars">
+            <div class="stress-row">
+              <span>Punto A</span>
+              <div class="bar-track"><div id="barA" class="bar bar-a"></div></div>
+              <strong id="stressAResult">73.55 MPa</strong>
+            </div>
+            <div class="stress-row">
+              <span>Punto B</span>
+              <div class="bar-track"><div id="barB" class="bar bar-b"></div></div>
+              <strong id="stressBResult">−56.88 MPa</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-grid metric-grid-2">
+          <div class="metric">
+            <span>Esfuerzo máximo absoluto</span>
+            <strong id="maxStressResult">73.55</strong>
+            <small>MPa</small>
+          </div>
+          <div class="metric">
+            <span>Factor de seguridad</span>
+            <strong id="fosResult">3.40</strong>
+            <small>σy / |σ|max</small>
+          </div>
+        </div>
+
+        <div id="statusBox" class="status safe">
+          <strong id="statusTitle">Condición aceptable</strong>
+          <span id="statusText">El esfuerzo máximo está por debajo del límite de fluencia.</span>
+        </div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <span class="step">3</span>
+          <h2>Registro de cálculo</h2>
+        </div>
+        <div id="log" class="log">
+          Ajuste los parámetros y presione “Iniciar simulación”.
+        </div>
+      </article>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
